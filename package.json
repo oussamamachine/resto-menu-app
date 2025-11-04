@@ -1,0 +1,21 @@
+{
+  "name": "qr-menu-system",
+  "version": "1.0.0",
+  "description": "QR Menu & Order Management System for Restaurants",
+  "scripts": {
+    "dev": "concurrently \"cd server && npm run dev\" \"cd client && npm start\"",
+    "install-all": "cd server && npm install && cd ../client && npm install",
+    "start:backend": "cd server && npm run dev",
+    "start:frontend": "cd client && npm start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "qr-menu",
+    "restaurant",
+    "order-management"
+  ],
+  "author": "",
+  "license": "MIT"
+}
