@@ -23,7 +23,6 @@ export default function LanguageSelector() {
 
   return (
     <div className="relative">
-      {/* Language Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-200"
@@ -36,13 +35,11 @@ export default function LanguageSelector() {
       {/* Dropdown Menu */}
       {isOpen && (
         <>
-          {/* Backdrop */}
           <div 
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
           
-          {/* Menu */}
           <div className="absolute top-full mt-2 right-0 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50 min-w-[160px]">
             {languages.map((lang) => (
               <button

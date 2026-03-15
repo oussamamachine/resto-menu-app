@@ -5,7 +5,7 @@ const restaurantSchema = new mongoose.Schema({
   slug: { type: String, required: true, unique: true },
   logoUrl: { type: String },
   adminKey: { type: String, default: 'changeme' },
-  qrCode: { type: String }, // Base64 encoded QR code image
+  qrCode: { type: String },
   createdAt: { type: Date, default: Date.now }
 });
 

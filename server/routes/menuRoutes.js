@@ -16,7 +16,6 @@ function adminGuard(req, res, next) {
     return res.status(400).json({ error: 'Restaurant slug is required' });
   }
 
-  // Verify key against the specific restaurant
   Restaurant.findOne({ slug: restaurantSlug })
     .then(restaurant => {
       if (!restaurant) {
@@ -31,17 +30,12 @@ function adminGuard(req, res, next) {
   .catch(() => res.status(500).json({ error: 'Server error' }));
 }
 
-// GET /api/menu?slug=restaurant-slug (or default restaurant)
 router.get('/', async (req, res) => {
   try {
     const { slug } = req.query;
-    let restaurant;
-    
-    if (slug) {
-      restaurant = await Restaurant.findOne({ slug });
-    } else {
-      restaurant = await Restaurant.findOne();
-    }
+    const restaurant = slug
+      ? await Restaurant.findOne({ slug })
+      : await Restaurant.findOne();
 
     if (!restaurant) {
       return res.status(404).json({ error: 'Restaurant not found' });
@@ -49,7 +43,7 @@ router.get('/', async (req, res) => {
 
     const items = await MenuItem.find({ restaurantId: restaurant._id, available: true })
       .sort({ category: 1, title: 1 });
-    
+
     res.json(items);
   } catch (error) {
     console.error('Error reading menu items', error);
@@ -57,30 +51,16 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/menu?key=xxx - Create new menu item (admin only)
 router.post('/', adminGuard, async (req, res) => {
   try {
-    const { title, description, price, category, image, restaurantSlug } = req.body;
+    const { title, description, price, category, image } = req.body;
 
     if (!title || !price) {
       return res.status(400).json({ error: 'Title and price are required' });
     }
 
-    let restaurant;
-    if (restaurantSlug) {
-      restaurant = await Restaurant.findOne({ slug: restaurantSlug });
-    } else if (req.restaurant) {
-      restaurant = req.restaurant;
-    } else {
-      restaurant = await Restaurant.findOne();
-    }
-
-    if (!restaurant) {
-      return res.status(404).json({ error: 'Restaurant not found' });
-    }
-
     const newItem = new MenuItem({
-      restaurantId: restaurant._id,
+      restaurantId: req.restaurant._id,
       title,
       description: description || '',
       price: parseFloat(price),
@@ -97,7 +77,6 @@ router.post('/', adminGuard, async (req, res) => {
   }
 });
 
-// PUT /api/menu/:id?key=xxx - Update menu item (admin only)
 router.put('/:id', adminGuard, async (req, res) => {
   try {
     const { title, description, price, category, image } = req.body;
@@ -127,7 +106,6 @@ router.put('/:id', adminGuard, async (req, res) => {
   }
 });
 
-// DELETE /api/menu/:id?key=xxx - Delete menu item (admin only)
 router.delete('/:id', adminGuard, async (req, res) => {
   try {
     const { id } = req.params;

@@ -70,10 +70,10 @@ export default function MenuManagement() {
 
   const fetchData = async () => {
     try {
-  const resRestaurant = await api.get(`/api/restaurant?slug=${restaurantSlug}`)
+      const resRestaurant = await api.get(`/api/restaurant?slug=${restaurantSlug}`)
       setRestaurant(resRestaurant.data)
-      
-  const resMenu = await api.get(`/api/menu?slug=${restaurantSlug}`)
+
+      const resMenu = await api.get(`/api/menu?slug=${restaurantSlug}`)
       setMenu(resMenu.data)
     } catch (e) {
       console.error('Failed to load data', e)
@@ -170,11 +170,9 @@ export default function MenuManagement() {
       }
 
       if (editingItem) {
-        // Update existing item
-  await api.put(`/api/menu/${editingItem._id}?key=${adminKey}&slug=${restaurantSlug}`, payload)
+        await api.put(`/api/menu/${editingItem._id}?key=${adminKey}&slug=${restaurantSlug}`, payload)
       } else {
-        // Create new item
-  await api.post(`/api/menu?key=${adminKey}&slug=${restaurantSlug}`, payload)
+        await api.post(`/api/menu?key=${adminKey}&slug=${restaurantSlug}`, payload)
       }
 
       // Reset form
@@ -217,7 +215,7 @@ export default function MenuManagement() {
     if (!confirm('Are you sure you want to delete this item?')) return
 
     try {
-  await api.delete(`/api/menu/${itemId}?key=${adminKey}&slug=${restaurantSlug}`)
+      await api.delete(`/api/menu/${itemId}?key=${adminKey}&slug=${restaurantSlug}`)
       await fetchData()
     } catch (e) {
       alert('Failed to delete item')
@@ -532,7 +530,6 @@ export default function MenuManagement() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredMenu.map(item => (
               <div key={item._id} className="card group hover:shadow-2xl">
-                {/* Image */}
                 <div className="relative overflow-hidden rounded-xl mb-4 h-48 bg-gray-100">
                   <img
                     src={item.image}
@@ -547,7 +544,6 @@ export default function MenuManagement() {
                   </span>
                 </div>
 
-                {/* Content */}
                 <div className="flex-1 mb-4">
                   <h3 className="text-lg font-bold mb-2 text-gray-900">
                     {item.title}
@@ -562,7 +558,6 @@ export default function MenuManagement() {
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="flex gap-2 pt-4 border-t border-gray-100">
                   <button
                     onClick={() => handleEdit(item)}

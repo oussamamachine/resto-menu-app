@@ -1,7 +1,6 @@
 import axios from 'axios'
 
-// Use absolute API base for cross-origin deployments (e.g., Vercel front-end + Render API)
-// Example: VITE_API_BASE=https://your-render-service.onrender.com
+// Set VITE_API_BASE when the frontend and backend are on different origins (e.g. Vercel + Render)
 const baseURL = import.meta.env.VITE_API_BASE || ''
 
 export const api = axios.create({
@@ -9,7 +8,5 @@ export const api = axios.create({
   withCredentials: false,
 })
 
-export const getSocketUrl = () => {
-  // Example: VITE_SOCKET_URL=https://your-render-service.onrender.com
-  return import.meta.env.VITE_SOCKET_URL || window.location.origin
-}
+export const getSocketUrl = () =>
+  import.meta.env.VITE_SOCKET_URL || window.location.origin

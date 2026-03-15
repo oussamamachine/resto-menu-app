@@ -19,28 +19,26 @@ export default function Dashboard() {
   const restaurantSlug = slug || 'sunrise-cafe'
 
   useEffect(() => {
-    // Check for stored session first
     const storedKey = localStorage.getItem('adminKey')
     const storedSlug = localStorage.getItem('adminSlug')
-    
+
     if (storedKey && storedSlug === restaurantSlug) {
       setAdminKey(storedKey)
       setAuthenticated(true)
       return
     }
 
-    // Check URL parameters (for backward compatibility)
+    // Support ?key= in URL for backward compatibility
     const keyFromUrl = searchParams.get('key')
     const authFromUrl = searchParams.get('auth')
-    
+
     if (keyFromUrl) {
       setAdminKey(keyFromUrl)
       setAuthenticated(true)
-      // Store in localStorage
       localStorage.setItem('adminKey', keyFromUrl)
       localStorage.setItem('adminSlug', restaurantSlug)
     } else if (authFromUrl === 'true') {
-      // Use default key from .env (development only)
+      // Development fallback using the default key
       setAdminKey('changeme')
       setAuthenticated(true)
       localStorage.setItem('adminKey', 'changeme')
@@ -51,14 +49,12 @@ export default function Dashboard() {
   useEffect(() => {
     if (!authenticated) return
 
-  fetchData()
-    
-    // Auto-refresh every 5 seconds
+    fetchData()
+
+    // Poll for new orders every 5 seconds as a fallback to socket updates
     const interval = setInterval(fetchOrders, 5000)
-    
-    // Socket.IO for real-time updates
-  // Connect to Socket.io on the current origin (works locally and in production)
-  const socket = io(getSocketUrl())
+
+    const socket = io(getSocketUrl())
     
     socket.on('ordersUpdated', (data) => {
       if (data.restaurantSlug === restaurantSlug) {
@@ -74,7 +70,7 @@ export default function Dashboard() {
 
   const fetchData = async () => {
     try {
-  const resRestaurant = await api.get(`/api/restaurant?slug=${restaurantSlug}`)
+      const resRestaurant = await api.get(`/api/restaurant?slug=${restaurantSlug}`)
       setRestaurant(resRestaurant.data)
       await fetchOrders()
     } catch (e) {
@@ -89,7 +85,7 @@ export default function Dashboard() {
 
   const fetchOrders = async () => {
     try {
-  const res = await api.get(`/api/orders?slug=${restaurantSlug}&key=${adminKey}`)
+      const res = await api.get(`/api/orders?slug=${restaurantSlug}&key=${adminKey}`)
       setOrders(res.data)
     } catch (e) {
       console.error('Failed to fetch orders', e)
@@ -98,7 +94,7 @@ export default function Dashboard() {
 
   const handleMarkDone = async (orderId) => {
     try {
-  await api.delete(`/api/orders/${orderId}?key=${adminKey}&slug=${restaurantSlug}`)
+      await api.delete(`/api/orders/${orderId}?key=${adminKey}&slug=${restaurantSlug}`)
       await fetchOrders()
     } catch (e) {
       console.error('Failed to mark order as done:', e)
@@ -116,16 +112,14 @@ export default function Dashboard() {
     setLoginError('')
     
     try {
-      // Verify the key using the new verify-admin endpoint
       const res = await api.post('/api/restaurant/verify-admin', {
         slug: restaurantSlug,
         adminKey: inputKey
       })
-      
+
       if (res.data.success) {
         setAdminKey(inputKey)
         setAuthenticated(true)
-        // Store in localStorage for session persistence
         localStorage.setItem('adminKey', inputKey)
         localStorage.setItem('adminSlug', restaurantSlug)
       } else {

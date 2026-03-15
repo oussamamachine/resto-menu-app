@@ -1,340 +1,133 @@
-# QR Menu & Order Management System
+# Resto Menu App
 
-A clean, professional full-stack system for restaurants to manage orders via QR code menus.
+A QR-code-based restaurant menu and ordering system. Each table gets its own QR code customers scan it, browse the menu, and place their order directly from their phone. Staff see incoming orders on a live dashboard and mark them done as they go.
 
-## 🎯 Features
+No app install required on the customer side, no separate POS terminal on the staff side.
 
-### For Customers
+## Demo
 
-- Scan QR code to view restaurant menu
-- Browse menu items with images and descriptions
-- Add items to cart with quantity control
-- Submit orders with name, table number, and special requests
-- Clean, mobile-responsive interface
+[Watch the demo video](records/rDemoQr.mp4) covers the full customer flow (scan → browse → order) and the admin dashboard receiving and managing orders in real time.
 
-### For Restaurants
+## Features
 
-- View all incoming orders in real-time
-- Mark orders as done
-- Auto-refresh dashboard every 5 seconds
-- Simple admin key protection
-- Track active vs. completed orders
+**Customer**
 
-## 🛠️ Tech Stack
+- Scan a table QR code to open the menu instantly
+- Browse by category with images and descriptions in 5 languages (EN, FR, ES, AR, DE)
+- Add items to cart, adjust quantities, and submit with name, table number, and any notes
 
-**Frontend:**
+**Admin**
 
-- React 18 + Vite
-- React Router for navigation
-- Axios for API calls
-- TailwindCSS for styling
-- Inter font
+- Live order dashboard — updates via Socket.IO with a 5-second polling fallback
+- Menu management: create, edit, and delete items; upload images or paste a URL
+- QR code generator: build per-table QR codes ready to download and print
 
-**Backend:**
+## Tech Stack
 
-- Node.js + Express
-- MongoDB + Mongoose
-- Socket.IO for real-time updates
-- QRCode generation
+| Layer    | Stack                                             |
+| -------- | ------------------------------------------------- |
+| Frontend | React 18, Vite, React Router, Axios, Tailwind     |
+| Backend  | Node.js, Express, MongoDB (Mongoose), Socket.IO   |
+| Other    | Multer (uploads), QRCode.js, key-based admin auth |
 
-## 📦 Installation
+## Setup
 
-### Prerequisites
-
-- Node.js 16+ installed
-- MongoDB running (local or Atlas)
-
-### Quick Setup
-
-1. **Clone and Install**
+**Requirements:** Node.js 16+, MongoDB (local or Atlas)
 
 ```bash
-git clone <repository>
+git clone https://github.com/oussamamachine/resto-menu-app
 cd qr-menu-demo
-
-# Install root dependencies
-npm install
-
-# Install all dependencies (backend + frontend)
-npm run install-all
+npm install          # root deps
+npm run install-all  # server + client deps
 ```
-
-2. **Setup MongoDB**
 
 Create `server/.env`:
 
-```bash
+```env
 MONGO_URI=mongodb://localhost:27017/qr-menu
 ADMIN_KEY=your-secret-key
 CLIENT_URL=http://localhost:3000
 PORT=5000
 ```
 
-For MongoDB Atlas, use your connection string:
+## Running
 
 ```bash
-MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/qr-menu
+npm run dev   # both servers via concurrently
 ```
 
-3. **Run Both Servers**
+Or separately:
 
 ```bash
-# From root directory
-npm run dev
+# terminal 1
+cd server && npm run dev
+
+# terminal 2
+cd client && npm start
 ```
 
-Or run separately:
+| Role     | URL                                            |
+| -------- | ---------------------------------------------- |
+| Customer | `http://localhost:3000/menu/sunrise-cafe`      |
+| Admin    | `http://localhost:3000/dashboard/sunrise-cafe` |
 
-```bash
-# Terminal 1 - Backend
-cd server
-npm run dev
+On first run the DB seeds itself with a sample restaurant (Sunrise Café) and 21 menu items across 4 categories.
 
-# Terminal 2 - Frontend
-cd client
-npm start
-```
-
-4. **Access the Application**
-
-- **Customer Menu**: http://localhost:3000/menu/sunrise-cafe
-- **Restaurant Dashboard**: http://localhost:3000/dashboard/sunrise-cafe?key=your-secret-key
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 qr-menu-demo/
 ├── server/
-│   ├── server.js           # Express app entry point
-│   ├── db.js               # MongoDB connection & seeding
-│   ├── models/
-│   │   ├── Restaurant.js   # Restaurant schema
-│   │   ├── MenuItem.js     # Menu item schema
-│   │   └── Order.js        # Order schema
-│   ├── routes/
-│   │   ├── restaurantRoutes.js
-│   │   ├── menuRoutes.js
-│   │   └── orderRoutes.js
-│   ├── .env                # Environment variables
-│   └── package.json
+│   ├── server.js        # Express entry point
+│   ├── db.js            # Mongoose connection + seed data
+│   ├── models/          # Restaurant, MenuItem, Order
+│   └── routes/          # menu, orders, restaurant, upload
 │
-├── client/
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── MenuView.jsx      # Customer menu page
-│   │   │   ├── CartPage.jsx      # Shopping cart & order form
-│   │   │   └── Dashboard.jsx     # Restaurant admin panel
-│   │   ├── components/
-│   │   │   ├── MenuItemCard.jsx  # Menu item display
-│   │   │   └── OrderCard.jsx     # Order display for dashboard
-│   │   ├── App.jsx               # Main app with routing & cart context
-│   │   ├── main.jsx              # React entry point
-│   │   └── index.css             # TailwindCSS styles
-│   ├── index.html
-│   ├── tailwind.config.js
-│   ├── vite.config.js
-│   └── package.json
-│
-├── package.json            # Root scripts (concurrently)
-└── README.md
+└── client/
+    └── src/
+        ├── pages/       # MenuView, CartPage, Dashboard, MenuManagement, QRCodeGenerator
+        ├── components/  # OrderCard, LanguageSelector
+        ├── i18n/        # translations (5 languages) + LanguageContext
+        └── lib/api.js   # axios instance
 ```
 
-## 🔌 API Endpoints
+## API
 
-### Public Endpoints
+| Method | Route                        | Auth  | Description               |
+| ------ | ---------------------------- | ----- | ------------------------- |
+| GET    | `/api/restaurant?slug=`      | —     | Restaurant info + QR code |
+| GET    | `/api/menu?slug=`            | —     | All available menu items  |
+| POST   | `/api/orders`                | —     | Place an order            |
+| GET    | `/api/orders?slug=&key=`     | admin | List orders               |
+| PATCH  | `/api/orders/:id?key=&slug=` | admin | Update order status       |
+| DELETE | `/api/orders/:id?key=&slug=` | admin | Remove an order           |
+| POST   | `/api/upload?key=&slug=`     | admin | Upload item image         |
 
-**GET /api/restaurant?slug=:slug**
+## Deployment
 
-- Get restaurant info including QR code
-- Response: `{ name, slug, logoUrl, qrCode }`
+**Backend (Render / Railway)**
 
-**GET /api/menu?slug=:slug**
+Set env vars `MONGO_URI`, `ADMIN_KEY`, `CLIENT_URL`, then deploy from `main`.
 
-- Get all menu items for a restaurant
-- Response: `[{ _id, title, description, price, image, category }]`
+**Frontend (Vercel / Netlify)**
 
-**POST /api/orders**
+Build command: `npm run build` — output dir: `dist` — add env var `VITE_API_BASE=https://your-backend.com`.
 
-- Create a new order
-- Body:
+## Notes
 
-```json
-{
-  "restaurantSlug": "sunrise-cafe",
-  "customerName": "John Doe",
-  "tableNumber": "5",
-  "notes": "No onions",
-  "items": [{ "_id": "...", "title": "Burger", "price": 12.99, "quantity": 2 }],
-  "total": 25.98
-}
-```
+- Admin auth is a plain key in `.env` works fine for a demo, but use proper JWT + bcrypt before going to production
+- CORS is wide open by default; lock it down with `ALLOWED_ORIGINS` in env
 
-### Admin Endpoints (require ?key=xxx)
-
-**GET /api/orders?slug=:slug&key=:key**
-
-- Get all orders for restaurant
-- Optional: `&status=new|preparing|done`
-
-**PATCH /api/orders/:id?key=:key&slug=:slug**
-
-- Update order status
-- Body: `{ "status": "done" }`
-
-**DELETE /api/orders/:id?key=:key&slug=:slug**
-
-- Delete/remove an order
-
-## 🎨 Default Data
-
-The system auto-seeds with sample data on first run:
-
-**Restaurant:**
-
-- Name: Sunrise Café
-- Slug: sunrise-cafe
-- Admin Key: changeme (from .env)
-
-**Menu Items:**
-
-- 21 items across 4 categories:
-  - Main Dishes (8 items)
-  - Appetizers (3 items)
-  - Drinks (5 items)
-  - Desserts (5 items)
-
-## 🔒 Security Notes
-
-⚠️ **This system uses simple key-based authentication for demonstration purposes.**
-
-For production:
-
-- Implement proper JWT authentication
-- Use bcrypt for password hashing
-- Add rate limiting
-- Enable HTTPS
-- Validate all inputs
-- Add CORS restrictions
-
-## 🚀 Deployment
-
-### Backend (Render/Railway)
-
-1. Push code to GitHub
-2. Create new web service
-3. Set environment variables:
-   - `MONGO_URI`
-   - `ADMIN_KEY`
-   - `CLIENT_URL`
-4. Deploy from main branch
-
-### Frontend (Vercel/Netlify)
-
-1. Import GitHub repository
-2. Build command: `npm run build`
-3. Output directory: `dist`
-4. Add environment variable:
-   - `VITE_API_URL=https://your-backend.com`
-
-## 🧪 Testing
-
-**Test Customer Flow:**
-
-1. Open menu: `http://localhost:3000/menu/sunrise-cafe`
-2. Add items to cart
-3. Go to cart and submit order
-4. Check order appears in dashboard
-
-**Test Dashboard:**
-
-1. Open: `http://localhost:3000/dashboard/sunrise-cafe?key=changeme`
-2. View incoming orders
-3. Mark orders as done
-4. Verify auto-refresh (5 seconds)
-
-## 🛠️ Customization
-
-### Add Your Restaurant
-
-Edit `server/db.js` in the `seedDatabase` function:
-
-```javascript
-const restaurant = await Restaurant.create({
-  name: "Your Restaurant",
-  slug: "your-restaurant",
-  logoUrl: "https://your-logo-url.com/logo.png",
-  adminKey: process.env.ADMIN_KEY,
-  qrCode: qrData,
-});
-```
-
-### Add Menu Items
-
-Edit `server/db.js` menu items array:
-
-```javascript
-{
-  restaurantId: restaurant._id,
-  title: 'Your Dish',
-  description: 'Delicious description',
-  price: 15.99,
-  image: 'https://image-url.com/dish.jpg',
-  category: 'Main'
-}
-```
-
-### Change Colors
-
-Edit `client/src/index.css` for button styles or `client/tailwind.config.js` for theme colors.
-
-## 📝 Scripts Reference
-
-**Root Directory:**
-
-- `npm run dev` - Run both servers concurrently
-- `npm run install-all` - Install all dependencies
-
-**Backend (server/):**
-
-- `npm run dev` - Start with nodemon (auto-restart)
-- `npm start` - Start server
-
-**Frontend (client/):**
-
-- `npm start` - Start Vite dev server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-
-## 🐛 Troubleshooting
-
-**Port already in use:**
+## Contributing
 
 ```bash
-# Windows
-netstat -ano | findstr :5000
-taskkill /PID <PID> /F
-
-# Mac/Linux
-lsof -i :5000
-kill -9 <PID>
+git checkout -b feature/add-order-filter
+# make your changes
+git commit -m "feat: add order filtering to dashboard"
+git push origin feature/add-order-filter
+# open a pull request
 ```
 
-**MongoDB connection error:**
+## Author
 
-- Verify MongoDB is running: `mongod --version`
-- Check connection string in `.env`
-- For Atlas, whitelist your IP address
-
-**Orders not appearing:**
-
-- Check backend console for errors
-- Verify admin key matches in `.env` and URL
-- Clear browser cache and localStorage
-
-## 📄 License
-
-MIT License - feel free to use for personal or commercial projects.
-
----
-
-**Built with ❤️ for restaurant owners and developers**
+**Oussama Machine**

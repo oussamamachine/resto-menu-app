@@ -4,7 +4,6 @@ const Restaurant = require('../models/Restaurant');
 
 const router = express.Router();
 
-// Simple admin guard middleware using query param ?key=xxx
 function adminGuard(req, res, next) {
   const providedKey = req.query.key || req.headers['x-admin-key'];
   const restaurantSlug = req.query.slug;
@@ -13,7 +12,6 @@ function adminGuard(req, res, next) {
     return res.status(401).json({ error: 'Admin key required' });
   }
 
-  // Verify key against restaurant
   Restaurant.findOne({ slug: restaurantSlug })
     .then(restaurant => {
       if (!restaurant) {
@@ -77,12 +75,7 @@ router.post('/', async (req, res) => {
 
     await newOrder.save();
 
-    // Emit socket event
-    try {
-      req.app.locals.io.emit('ordersUpdated', { restaurantSlug });
-    } catch (e) {
-      console.error('Socket emit error:', e);
-    }
+    req.app.locals.io.emit('ordersUpdated', { restaurantSlug });
 
     res.status(201).json(newOrder);
   } catch (e) {
@@ -109,11 +102,7 @@ router.patch('/:id', adminGuard, async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    try {
-      req.app.locals.io.emit('ordersUpdated', { restaurantSlug: req.restaurant.slug });
-    } catch (e) {
-      console.error('Socket emit error:', e);
-    }
+    req.app.locals.io.emit('ordersUpdated', { restaurantSlug: req.restaurant.slug });
 
     res.json(order);
   } catch (e) {
@@ -122,7 +111,7 @@ router.patch('/:id', adminGuard, async (req, res) => {
   }
 });
 
-// DELETE /api/orders/:id?key=xxx&slug=xxx (admin only)
+// DELETE /api/orders
 router.delete('/:id', adminGuard, async (req, res) => {
   try {
     const order = await Order.findOneAndDelete({
@@ -134,11 +123,7 @@ router.delete('/:id', adminGuard, async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    try {
-      req.app.locals.io.emit('ordersUpdated', { restaurantSlug: req.restaurant.slug });
-    } catch (e) {
-      console.error('Socket emit error:', e);
-    }
+    req.app.locals.io.emit('ordersUpdated', { restaurantSlug: req.restaurant.slug });
 
     res.json({ success: true });
   } catch (e) {

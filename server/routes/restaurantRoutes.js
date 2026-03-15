@@ -8,13 +8,9 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const { slug } = req.query;
-    let restaurant;
-
-    if (slug) {
-      restaurant = await Restaurant.findOne({ slug });
-    } else {
-      restaurant = await Restaurant.findOne();
-    }
+    const restaurant = slug
+      ? await Restaurant.findOne({ slug })
+      : await Restaurant.findOne();
 
     if (!restaurant) {
       return res.status(404).json({ error: 'Restaurant not found' });

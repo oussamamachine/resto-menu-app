@@ -8,13 +8,11 @@ export const LanguageProvider = ({ children }) => {
   const [translations, setTranslations] = useState(getLanguage('en'))
 
   useEffect(() => {
-    // Check localStorage for saved language preference
     const savedLang = localStorage.getItem('menuLanguage')
     if (savedLang) {
       changeLanguage(savedLang)
     } else {
-      // Try to detect browser language
-      const browserLang = navigator.language.split('-')[0] // e.g., 'en-US' -> 'en'
+      const browserLang = navigator.language.split('-')[0] // e.g. 'en-US' → 'en'
       const supportedLangs = ['en', 'fr', 'es', 'ar', 'de']
       if (supportedLangs.includes(browserLang)) {
         changeLanguage(browserLang)
@@ -26,8 +24,8 @@ export const LanguageProvider = ({ children }) => {
     setLanguage(lang)
     setTranslations(getLanguage(lang))
     localStorage.setItem('menuLanguage', lang)
-    
-    // Set HTML dir attribute for RTL languages
+
+    // RTL support for Arabic
     if (lang === 'ar') {
       document.documentElement.dir = 'rtl'
       document.documentElement.lang = 'ar'
@@ -38,13 +36,12 @@ export const LanguageProvider = ({ children }) => {
   }
 
   return (
-    <LanguageContext.Provider value={{ language, currentLanguage: language, translations, changeLanguage }}>
+    <LanguageContext.Provider value={{ language, translations, changeLanguage }}>
       {children}
     </LanguageContext.Provider>
   )
 }
 
-// Custom hook to use language context
 export const useLanguage = () => {
   const context = useContext(LanguageContext)
   if (!context) {

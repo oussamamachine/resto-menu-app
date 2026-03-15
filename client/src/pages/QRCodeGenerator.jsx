@@ -13,17 +13,16 @@ export default function QRCodeGenerator() {
   const printRef = useRef()
 
   useEffect(() => {
-    // Check for stored session first
     const storedKey = localStorage.getItem('adminKey')
     if (storedKey) {
       setAuthenticated(true)
       return
     }
 
-    // Check URL parameters
+    // Support ?key= in URL for backward compatibility
     const keyFromUrl = searchParams.get('key')
     const authFromUrl = searchParams.get('auth')
-    
+
     if (keyFromUrl) {
       setAuthenticated(true)
       localStorage.setItem('adminKey', keyFromUrl)
@@ -49,7 +48,7 @@ export default function QRCodeGenerator() {
 
   const fetchRestaurant = async () => {
     try {
-  const response = await api.get('/api/restaurant?slug=sunrise-cafe')
+      const response = await api.get('/api/restaurant?slug=sunrise-cafe')
       setRestaurant(response.data)
     } catch (e) {
       console.error('Failed to fetch restaurant', e)

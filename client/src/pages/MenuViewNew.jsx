@@ -9,7 +9,7 @@ export default function MenuViewNew() {
   const { slug } = useParams()
   const [searchParams] = useSearchParams()
   const { cart, addToCart } = useContext(CartContext)
-  const { translations: t, currentLanguage } = useLanguage()
+  const { translations: t, language } = useLanguage()
   const [menu, setMenu] = useState([])
   const [loading, setLoading] = useState(true)
   const [tableNumber, setTableNumber] = useState(null)
@@ -20,16 +20,21 @@ export default function MenuViewNew() {
     slug: 'restaurant' 
   })
 
-  // Helper function to get localized description
   const getLocalizedDescription = (item) => {
-    if (item.descriptions && item.descriptions[currentLanguage]) {
-      return item.descriptions[currentLanguage]
+    if (item.descriptions && item.descriptions[language]) {
+      return item.descriptions[language]
     }
     return item.description || ''
   }
 
+  const getLocalizedTitle = (item) => {
+    if (item.titles && item.titles[language]) {
+      return item.titles[language]
+    }
+    return item.title || ''
+  }
+
   useEffect(() => {
-    // Get table number from URL if present
     const tableParam = searchParams.get('table')
     if (tableParam) {
       setTableNumber(tableParam)
@@ -41,13 +46,11 @@ export default function MenuViewNew() {
     async function fetchData() {
       try {
         const restaurantSlug = slug || 'sunrise-cafe'
-        
-        // Fetch restaurant info
-  const resRestaurant = await api.get(`/api/restaurant?slug=${restaurantSlug}`)
+
+        const resRestaurant = await api.get(`/api/restaurant?slug=${restaurantSlug}`)
         if (resRestaurant.data) setRestaurant(resRestaurant.data)
 
-        // Fetch menu
-  const resMenu = await api.get(`/api/menu?slug=${restaurantSlug}`)
+        const resMenu = await api.get(`/api/menu?slug=${restaurantSlug}`)
         setMenu(resMenu.data)
       } catch (e) {
         console.error('Fetch error:', e)
@@ -58,17 +61,12 @@ export default function MenuViewNew() {
     fetchData()
   }, [slug])
 
-  const handleAddToCart = (item) => {
-    addToCart(item)
-  }
-
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
   // Get unique categories from database (original English values)
   const dbCategories = ['All', ...new Set(menu.map(item => item.category).filter(Boolean))]
   
-  // Helper function to translate category names for display
   const translateCategory = (category) => {
     const categoryMap = {
       'All': t.allCategories,
@@ -85,7 +83,7 @@ export default function MenuViewNew() {
     ? menu 
     : menu.filter(item => item.category === activeCategory)
 
-  // Get featured items (first 5 items or items with highest prices)
+  // Keep only 5 items for the featured horizontal strip
   const featuredItems = menu.slice(0, 5)
 
   // Group by category for vertical sections
@@ -98,7 +96,6 @@ export default function MenuViewNew() {
 
   return (
     <div className="min-h-screen bg-[#f5f1ed]">
-      {/* Fixed Header */}
       <header className="bg-white sticky top-0 z-50 shadow-sm">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
@@ -120,9 +117,8 @@ export default function MenuViewNew() {
         </div>
       </header>
 
-      {/* Main Content - Vertical Scroll */}
       <div className="pb-32">
-        {/* Hero Section */}
+        {/* Hero */}
         <div className="bg-gradient-to-br from-[#d4825c] to-[#c87550] px-4 py-8 text-white">
           <h2 className="text-2xl font-bold mb-2">{t.welcomeTitle}</h2>
           <p className="text-white/90 text-sm">{t.welcomeSubtitle}</p>
@@ -138,7 +134,6 @@ export default function MenuViewNew() {
             <p className="text-sm text-gray-600">{t.ourMostPopular}</p>
           </div>
 
-          {/* Horizontal Scroll Container */}
           <div 
             className="flex gap-4 overflow-x-auto px-4 pb-4 snap-x snap-mandatory scrollbar-hide"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
@@ -153,7 +148,6 @@ export default function MenuViewNew() {
                   className="flex-shrink-0 w-64 snap-start group"
                 >
                   <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-105">
-                    {/* Image */}
                     <div className="relative h-40 overflow-hidden">
                       <img
                         src={item.image}
@@ -175,10 +169,9 @@ export default function MenuViewNew() {
                       )}
                     </div>
 
-                    {/* Content */}
                     <div className="p-4">
                       <h4 className="font-bold text-gray-800 mb-1 truncate">
-                        {item.title}
+                        {getLocalizedTitle(item)}
                       </h4>
                       <p className="text-xs text-gray-600 mb-3 line-clamp-2">
                         {getLocalizedDescription(item)}
@@ -188,7 +181,7 @@ export default function MenuViewNew() {
                           €{item.price.toFixed(2)}
                         </span>
                         <button
-                          onClick={() => handleAddToCart(item)}
+                          onClick={() => addToCart(item)}
                           className="w-9 h-9 rounded-full bg-[#d4825c] text-white flex items-center justify-center shadow-md hover:bg-[#c87550] active:scale-95 transition-all"
                         >
                           <span className="text-xl font-bold">+</span>
@@ -232,13 +225,11 @@ export default function MenuViewNew() {
             <>
               {Object.keys(groupedMenu).map(category => (
                 <div key={category} className="mb-8">
-                  {/* Category Header */}
                   <div className="flex items-center gap-2 mb-4">
                     <span className="text-2xl">🍽️</span>
                     <h2 className="text-2xl font-bold text-gray-800">{category}</h2>
                   </div>
 
-                  {/* Menu Items - Vertical List */}
                   <div className="space-y-4">
                     {groupedMenu[category].map(item => {
                       const cartItem = cart.find(c => c._id === item._id || c.id === item._id)
@@ -249,9 +240,7 @@ export default function MenuViewNew() {
                           key={item._id}
                           className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-all"
                         >
-                          {/* Item Layout */}
                           <div className="flex gap-4 p-4">
-                            {/* Image */}
                             <div className="relative w-24 h-24 flex-shrink-0 overflow-hidden rounded-xl">
                               <img
                                 src={item.image}
@@ -273,10 +262,9 @@ export default function MenuViewNew() {
                               )}
                             </div>
 
-                            {/* Content */}
                             <div className="flex-1 min-w-0">
                               <h3 className="font-bold text-gray-800 mb-1">
-                                {item.title}
+                                {getLocalizedTitle(item)}
                               </h3>
                               <p className="text-sm text-gray-600 mb-2 line-clamp-2">
                                 {getLocalizedDescription(item)}
@@ -286,7 +274,7 @@ export default function MenuViewNew() {
                                   €{item.price.toFixed(2)}
                                 </span>
                                 <button
-                                  onClick={() => handleAddToCart(item)}
+                                  onClick={() => addToCart(item)}
                                   className="w-8 h-8 rounded-full bg-[#d4825c] text-white flex items-center justify-center shadow-md hover:bg-[#c87550] active:scale-95 transition-all"
                                 >
                                   <span className="text-lg font-bold">+</span>

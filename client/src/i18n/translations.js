@@ -1,5 +1,3 @@
-// Language translations for the QR Menu system
-
 export const translations = {
   en: {
     // Header

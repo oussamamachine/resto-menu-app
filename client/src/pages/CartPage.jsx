@@ -16,9 +16,6 @@ export default function CartPage() {
   const [success, setSuccess] = useState(false)
   const navigate = useNavigate()
 
-  // (Descriptions are not shown on the cart page; removing unused helper to satisfy lint)
-
-  // Pre-fill table number from QR code scan
   useEffect(() => {
     const savedTableNumber = localStorage.getItem('tableNumber')
     if (savedTableNumber) {

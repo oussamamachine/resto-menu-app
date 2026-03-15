@@ -7,13 +7,12 @@ import MenuManagement from './pages/MenuManagement'
 import QRCodeGenerator from './pages/QRCodeGenerator'
 import { LanguageProvider } from './i18n/LanguageContext'
 
-// Cart context for managing cart state
+// Cart state is shared via context so any page can read/modify it
 export const CartContext = React.createContext()
 
 function App() {
   const [cart, setCart] = useState([])
 
-  // Load cart from localStorage on app start
   useEffect(() => {
     const savedCart = localStorage.getItem('qr-menu-cart')
     if (savedCart) {
@@ -21,7 +20,6 @@ function App() {
     }
   }, [])
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('qr-menu-cart', JSON.stringify(cart))
   }, [cart])
